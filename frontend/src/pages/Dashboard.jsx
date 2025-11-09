@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { dashboardService } from '../services/dashboardService';
 import { setStats, setLoading, setError } from '../store/slices/dashboardSlice';
@@ -11,18 +11,67 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { stats, loading, error } = useSelector((state) => state.dashboard);
+  const allLeads = useSelector((state) => state.leads.leads);
 
+  const statsLoadRef = useRef(false);
   useEffect(() => {
     loadStats();
   }, []);
 
   const loadStats = async () => {
     dispatch(setLoading(true));
+    const t0 = performance.now();
     try {
       const data = await dashboardService.getStats();
+      const t1 = performance.now();
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.info('[Dashboard] Stats API success in', Math.round(t1 - t0), 'ms');
+        if (!statsLoadRef.current) {
+          console.debug('[Dashboard] Stats sample:', data);
+          statsLoadRef.current = true;
+        }
+      }
       dispatch(setStats(data));
     } catch (err) {
-      dispatch(setError(err.message));
+      const t1 = performance.now();
+      console.warn('[Dashboard] Stats API failed after', Math.round(t1 - t0), 'ms:', err.message);
+      // Fallback: derive stats from loaded leads if API endpoint is missing
+      const statusCounts = {};
+      const districtCounts = {};
+      const sourceCounts = {};
+      let totalRevenue = 0;
+      allLeads.forEach(l => {
+        const s = l.status || 'new';
+        statusCounts[s] = (statusCounts[s] || 0) + 1;
+        const d = l.district || 'unassigned';
+        districtCounts[d] = (districtCounts[d] || 0) + 1;
+        const src = l.source || 'manual';
+        sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+        if (l.status === 'won' && l.budget) totalRevenue += (l.budget || 0);
+      });
+      const total = allLeads.length;
+      const won = statusCounts['won'] || 0;
+      const derived = {
+        total_leads: total,
+        new_leads: statusCounts['new'] || 0,
+        contacted_leads: statusCounts['contacted'] || 0,
+        qualified_leads: statusCounts['qualified'] || 0,
+        won_leads: won,
+        lost_leads: statusCounts['lost'] || 0,
+        conversion_rate: total ? Number(((won / total) * 100).toFixed(2)) : 0,
+        total_revenue: totalRevenue,
+        leads_by_status: statusCounts,
+        leads_by_district: districtCounts,
+        leads_by_source: sourceCounts,
+        recent_activities: allLeads.slice(0, 10).map(l => ({
+          lead_id: l.id,
+          lead_name: l.name,
+          status: l.status,
+          updated_at: l.createdDate
+        }))
+      };
+      dispatch(setStats(derived));
     }
   };
 

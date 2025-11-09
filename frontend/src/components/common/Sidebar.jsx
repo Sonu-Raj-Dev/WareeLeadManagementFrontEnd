@@ -7,11 +7,11 @@ const Sidebar = () => {
   const { user } = useSelector((state) => state.auth);
 
   const navItems = [
-    { path: '/', icon: FiHome, label: 'Dashboard', roles: ['admin', 'manager', 'sales'] },
-    { path: '/leads', icon: FiUsers, label: 'Leads', roles: ['admin', 'manager', 'sales'] },
-    { path: '/users', icon: FiUserPlus, label: 'Users', roles: ['admin', 'manager'] },
-    { path: '/districts', icon: FiMap, label: 'Districts', roles: ['admin', 'manager'] },
-    { path: '/reports', icon: FiFileText, label: 'Reports', roles: ['admin', 'manager'] },
+    { path: '/', icon: FiHome, label: 'Dashboard', roles: ['admin', 'manager', 'sales','Superadmin'] },
+    { path: '/leads', icon: FiUsers, label: 'Leads', roles: ['admin', 'manager', 'sales','Superadmin'] },
+    { path: '/users', icon: FiUserPlus, label: 'Users', roles: ['admin', 'manager','Superadmin'] },
+    { path: '/districts', icon: FiMap, label: 'Districts', roles: ['admin', 'manager','Superadmin'] },
+    { path: '/reports', icon: FiFileText, label: 'Reports', roles: ['admin', 'manager','Superadmin'] },
   ];
 
   const filteredNavItems = navItems.filter((item) => item.roles.includes(user?.role));

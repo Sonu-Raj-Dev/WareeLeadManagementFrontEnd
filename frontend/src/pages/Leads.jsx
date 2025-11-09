@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiUpload, FiDownload, FiFilter } from 'react-icons/fi';
@@ -12,11 +12,14 @@ const Leads = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { leads, loading } = useSelector((state) => state.leads);
+  const auth = useSelector((state) => state.auth);
   const [showUpload, setShowUpload] = useState(false);
   const [filters, setFilters] = useState({
     status: '',
     source: '',
   });
+
+  const initialLoadRef = useRef(false);
 
   useEffect(() => {
     loadLeads();
@@ -24,11 +27,22 @@ const Leads = () => {
 
   const loadLeads = async () => {
     dispatch(setLoading(true));
+    const t0 = performance.now();
     try {
       const data = await leadService.getLeads(filters);
+      const t1 = performance.now();
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.info('[Leads] Loaded', data.length, 'items in', Math.round(t1 - t0), 'ms');
+        if (!initialLoadRef.current) {
+          console.table(data.slice(0, 5));
+          initialLoadRef.current = true;
+        }
+      }
       dispatch(setLeads(data));
     } catch (err) {
-      console.error('Error loading leads:', err);
+      const t1 = performance.now();
+      console.error('[Leads] Load failed after', Math.round(t1 - t0), 'ms', err);
       dispatch(setLoading(false));
     }
   };
@@ -85,6 +99,14 @@ const Leads = () => {
 
   return (
     <div className="space-y-6" data-testid="leads-page">
+      {/* {process.env.NODE_ENV === 'development' && (
+        <div className="p-2 mb-2 text-sm text-gray-700 dark:text-gray-200 bg-yellow-50 dark:bg-yellow-900/20 rounded">
+          <div><strong>Debug:</strong></div>
+          <div>isAuthenticated: {String(auth.isAuthenticated)}</div>
+          <div>token present: {auth.token ? 'yes' : 'no'}</div>
+          <div>user: {auth.user ? JSON.stringify(auth.user) : 'null'}</div>
+        </div>
+      )} */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Leads</h1>

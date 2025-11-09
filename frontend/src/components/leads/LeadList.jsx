@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 const LeadList = ({ leads, onDelete, onStatusUpdate }) => {
   const navigate = useNavigate();
+  console.log('LeadList: rendering with leads:', leads);
   const { user } = useSelector((state) => state.auth);
 
   const getStatusColor = (status) => {

@@ -86,7 +86,9 @@ const Users = () => {
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
 
-  if (currentUser?.role !== 'admin' && currentUser?.role !== 'manager') {
+  // Permission guard: allow admin, manager, superadmin (case-insensitive)
+  const normalizedRole = currentUser?.role?.toLowerCase();
+  if (!['admin', 'manager', 'superadmin'].includes(normalizedRole)) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 dark:text-gray-400">You don't have permission to view this page.</p>
@@ -102,7 +104,7 @@ const Users = () => {
           <p className="text-gray-600 dark:text-gray-400">Manage system users</p>
         </div>
 
-        {currentUser?.role === 'admin' && (
+        {['admin','manager','superadmin'].includes(normalizedRole) && (
           <button
             onClick={() => {
               setShowForm(true);
@@ -235,7 +237,7 @@ const Users = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Role
                   </th>
-                  {currentUser?.role === 'admin' && (
+                  {['admin','manager','superadmin'].includes(normalizedRole) && (
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Actions
                     </th>
@@ -259,7 +261,7 @@ const Users = () => {
                         {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </span>
                     </td>
-                    {currentUser?.role === 'admin' && (
+                    {['admin','manager','superadmin'].includes(normalizedRole) && (
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <button

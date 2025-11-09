@@ -56,7 +56,7 @@ const Districts = () => {
     }
   };
 
-  if (user?.role !== 'admin' && user?.role !== 'manager') {
+  if (user?.role !== 'admin' && user?.role !== 'manager' &&user?.role !== 'Superadmin') {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 dark:text-gray-400">You don't have permission to view this page.</p>
